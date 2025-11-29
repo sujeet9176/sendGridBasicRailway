@@ -90,15 +90,18 @@
 
             <div id="errorAlert" class="alert alert-error"></div>
             <div id="successAlert" class="alert alert-success"></div>
-            <div id="loading" class="loading">Processing...</div>
+            <div id="loading" class="loading">Loading templates...</div>
 
             <div class="contact-form-container">
                 <form id="versionForm" class="contact-form">
                     <div class="form-group">
-                        <label for="template_id">Template ID *</label>
-                        <input type="text" id="template_id" name="template_id" required 
-                               class="form-input" placeholder="e.g., d-cacb0148f3a24ccb9cc7e615573ab9b6"
-                               value="d-cacb0148f3a24ccb9cc7e615573ab9b6">
+                        <label for="template_id">Select Template *</label>
+                        <select id="template_id" name="template_id" required class="form-input">
+                            <option value="">-- Loading templates... --</option>
+                        </select>
+                        <small style="color: #7f8c8d; margin-top: 0.5rem; display: block;">
+                            Select a template from the list
+                        </small>
                     </div>
 
                     <div class="form-group">
@@ -191,6 +194,56 @@
     </footer>
 
     <script>
+        let templatesData = [];
+
+        // Load templates on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            loadTemplates();
+        });
+
+        async function loadTemplates() {
+            const errorAlert = document.getElementById('errorAlert');
+            const loading = document.getElementById('loading');
+            const templateSelect = document.getElementById('template_id');
+
+            try {
+                const response = await fetch('/sendGridBasic/templates');
+                const data = await response.json();
+
+                loading.style.display = 'none';
+
+                if (data.success) {
+                    templatesData = data.data || [];
+                    
+                    // Clear existing options
+                    templateSelect.innerHTML = '<option value="">-- Select a template --</option>';
+
+                    if (templatesData.length === 0) {
+                        errorAlert.textContent = 'No templates found. Create a template first.';
+                        errorAlert.style.display = 'block';
+                        templateSelect.innerHTML = '<option value="">-- No templates available --</option>';
+                    } else {
+                        // Populate dropdown with template names (but values are template IDs)
+                        templatesData.forEach(template => {
+                            const option = document.createElement('option');
+                            option.value = template.id; // Send ID to backend
+                            option.textContent = template.name || template.id; // Show name to user
+                            templateSelect.appendChild(option);
+                        });
+                    }
+                } else {
+                    errorAlert.textContent = data.error || 'Failed to load templates';
+                    errorAlert.style.display = 'block';
+                    templateSelect.innerHTML = '<option value="">-- Error loading templates --</option>';
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                errorAlert.textContent = 'Error loading templates: ' + error.message;
+                errorAlert.style.display = 'block';
+                templateSelect.innerHTML = '<option value="">-- Error loading templates --</option>';
+            }
+        }
+
         // Fetch HTML from URL
         document.getElementById('fetchBtn').addEventListener('click', async function() {
             const pageUrl = document.getElementById('page_url').value.trim();
