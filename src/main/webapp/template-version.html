@@ -107,33 +107,38 @@
                     <div class="form-group">
                         <label for="name">Version Name *</label>
                         <input type="text" id="name" name="name" required 
-                               class="form-input" placeholder="e.g., v1" value="v1">
+                               class="form-input" placeholder="e.g., v1">
                     </div>
 
                     <div class="form-group">
-                        <label for="subject">Subject</label>
-                        <input type="text" id="subject" name="subject" 
-                               class="form-input" placeholder="e.g., subject test" value="subject test">
+                        <label for="subject">Subject *</label>
+                        <input type="text" id="subject" name="subject" required
+                               class="form-input" placeholder="e.g., subject test">
                     </div>
 
                     <div class="form-group">
-                        <label for="page_url">Fetch HTML from URL (Optional)</label>
+                        <label for="page_url">Fetch HTML from URL *</label>
                         <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
-                            <input type="url" id="page_url" name="page_url" 
+                            <input type="url" id="page_url" name="page_url" required
                                    class="form-input" placeholder="https://example.com"
                                    style="flex: 1;">
                             <button type="button" id="fetchBtn" class="btn btn-secondary" style="white-space: nowrap;">Fetch HTML</button>
                         </div>
                         <small style="color: #7f8c8d; display: block; margin-bottom: 0.5rem;">
-                            Enter a URL and click "Fetch HTML" to load the page source
+                            Enter a URL and click "Fetch HTML" to load the page source (required)
                         </small>
                     </div>
 
                     <div class="form-group">
-                        <label for="html_content">HTML Content</label>
-                        <textarea id="html_content" name="html_content" 
+                        <label for="html_content">HTML Content *</label>
+                        <textarea id="html_content" name="html_content" required
                                   class="form-input form-textarea" 
-                                  placeholder="Enter HTML content or fetch from URL above"><!doctype><html><body></body></html></textarea>
+                                  placeholder="Use 'Fetch HTML' button above to populate this field"
+                                  readonly
+                                  style="background-color: #f5f5f5; cursor: not-allowed;"></textarea>
+                        <small style="color: #7f8c8d; margin-top: 0.5rem; display: block;">
+                            Use "Fetch HTML" button above to populate this field (required)
+                        </small>
                     </div>
 
                     <div class="form-group">
@@ -161,10 +166,13 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="updated_at">Updated At (Optional)</label>
+                        <label for="updated_at">Updated At</label>
                         <input type="text" id="updated_at" name="updated_at" 
-                               class="form-input" placeholder="e.g., 2025-11-10 06:33:33"
-                               value="2025-11-10 06:33:33">
+                               class="form-input" readonly
+                               style="background-color: #f5f5f5; cursor: not-allowed;">
+                        <small style="color: #7f8c8d; margin-top: 0.5rem; display: block;">
+                            Automatically set to current system time
+                        </small>
                     </div>
 
                     <button type="submit" class="btn btn-primary" id="submitBtn">Create Version</button>
@@ -196,10 +204,24 @@
     <script>
         let templatesData = [];
 
-        // Load templates on page load
+        // Load templates on page load and set current time
         window.addEventListener('DOMContentLoaded', function() {
             loadTemplates();
+            setCurrentDateTime();
         });
+
+        // Set current system time for updated_at field
+        function setCurrentDateTime() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const currentDateTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            document.getElementById('updated_at').value = currentDateTime;
+        }
 
         async function loadTemplates() {
             const errorAlert = document.getElementById('errorAlert');
@@ -312,15 +334,29 @@
             // Validate required fields
             const templateId = document.getElementById('template_id').value.trim();
             const name = document.getElementById('name').value.trim();
+            const subject = document.getElementById('subject').value.trim();
+            const htmlContent = document.getElementById('html_content').value.trim();
             
             if (!templateId) {
-                errorAlert.textContent = 'Template ID is required';
+                errorAlert.textContent = 'Template selection is required';
                 errorAlert.style.display = 'block';
                 return;
             }
             
             if (!name) {
                 errorAlert.textContent = 'Version name is required';
+                errorAlert.style.display = 'block';
+                return;
+            }
+            
+            if (!subject) {
+                errorAlert.textContent = 'Subject is required';
+                errorAlert.style.display = 'block';
+                return;
+            }
+            
+            if (!htmlContent) {
+                errorAlert.textContent = 'HTML content is required. Please use "Fetch HTML" button to populate it.';
                 errorAlert.style.display = 'block';
                 return;
             }
