@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template List - SendGrid Basic</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .template-list-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+        }
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-family: inherit;
+            background-color: white;
+        }
+        .form-group select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        .template-info {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            display: none;
+        }
+        .template-info h4 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+        .template-info-item {
+            margin-bottom: 0.5rem;
+        }
+        .template-info-item strong {
+            color: #2c3e50;
+        }
+        .loading {
+            text-align: center;
+            padding: 2rem;
+        }
+        .refresh-btn {
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a href="home.html">SendGrid Basic</a>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="home.html">Home</a></li>
+                <li><a href="template.html">Create Template</a></li>
+                <li><a href="templates.html">View Templates</a></li>
+                <li><a href="template-version.html">Create Version</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h1>Template List</h1>
+                <p>View and select from your SendGrid dynamic email templates</p>
+            </div>
+
+            <div id="errorAlert" class="alert alert-error" style="background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;"></div>
+            <div id="loading" class="loading">Loading templates...</div>
+
+            <div class="template-list-container" id="templateContainer" style="display: none;">
+                <div class="form-group">
+                    <label for="templateSelect">Select Template</label>
+                    <select id="templateSelect" name="templateSelect" class="form-input">
+                        <option value="">-- Select a template --</option>
+                    </select>
+                </div>
+
+                <div id="templateInfo" class="template-info">
+                    <h4>Template Details</h4>
+                    <div class="template-info-item">
+                        <strong>Template ID:</strong> <span id="templateId"></span>
+                    </div>
+                    <div class="template-info-item">
+                        <strong>Name:</strong> <span id="templateName"></span>
+                    </div>
+                    <div class="template-info-item">
+                        <strong>Generation:</strong> <span id="templateGeneration"></span>
+                    </div>
+                    <div class="template-info-item">
+                        <strong>Updated At:</strong> <span id="templateUpdated"></span>
+                    </div>
+                </div>
+
+                <button onclick="loadTemplates()" class="btn btn-secondary refresh-btn">Refresh List</button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 SendGrid Basic. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        let templatesData = [];
+
+        // Load templates on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            loadTemplates();
+        });
+
+        // Handle template selection
+        document.getElementById('templateSelect').addEventListener('change', function() {
+            const selectedId = this.value;
+            if (selectedId) {
+                const template = templatesData.find(t => t.id === selectedId);
+                if (template) {
+                    displayTemplateInfo(template);
+                }
+            } else {
+                document.getElementById('templateInfo').style.display = 'none';
+            }
+        });
+
+        async function loadTemplates() {
+            const errorAlert = document.getElementById('errorAlert');
+            const loading = document.getElementById('loading');
+            const templateContainer = document.getElementById('templateContainer');
+            const templateSelect = document.getElementById('templateSelect');
+
+            // Hide previous messages
+            errorAlert.style.display = 'none';
+            templateContainer.style.display = 'none';
+            loading.style.display = 'block';
+
+            try {
+                const response = await fetch('/sendGridBasic/templates');
+                const data = await response.json();
+
+                loading.style.display = 'none';
+
+                if (data.success) {
+                    templatesData = data.data || [];
+                    
+                    // Clear existing options except the first one
+                    templateSelect.innerHTML = '<option value="">-- Select a template --</option>';
+
+                    if (templatesData.length === 0) {
+                        errorAlert.textContent = 'No templates found. Create a template first.';
+                        errorAlert.style.display = 'block';
+                    } else {
+                        // Populate dropdown with template names
+                        templatesData.forEach(template => {
+                            const option = document.createElement('option');
+                            option.value = template.id;
+                            option.textContent = template.name || template.id;
+                            templateSelect.appendChild(option);
+                        });
+
+                        templateContainer.style.display = 'block';
+                    }
+                } else {
+                    errorAlert.textContent = data.error || 'Failed to load templates';
+                    errorAlert.style.display = 'block';
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                errorAlert.textContent = 'Error: ' + error.message;
+                errorAlert.style.display = 'block';
+            }
+        }
+
+        function displayTemplateInfo(template) {
+            document.getElementById('templateId').textContent = template.id || 'N/A';
+            document.getElementById('templateName').textContent = template.name || 'N/A';
+            document.getElementById('templateGeneration').textContent = template.generation || 'N/A';
+            
+            // Format updated date
+            if (template.updated_at) {
+                const date = new Date(template.updated_at);
+                document.getElementById('templateUpdated').textContent = date.toLocaleString();
+            } else {
+                document.getElementById('templateUpdated').textContent = 'N/A';
+            }
+
+            document.getElementById('templateInfo').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
+
