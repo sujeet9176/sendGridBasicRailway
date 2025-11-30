@@ -1,12 +1,8 @@
 package com.sendgrid.servlet;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.util.Properties;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -15,30 +11,35 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import com.sendgrid.SendGrid;
+import com.sendgrid.Request;
+import com.sendgrid.Response;
+import com.sendgrid.Method;
 import org.json.JSONObject;
+import java.util.HashMap;
 
 /**
- * Template Version Servlet - Handles creating template versions in SendGrid
+ * Create Template ID Servlet - Handles SendGrid dynamic email template creation
  */
-@WebServlet(name = "TemplateVersionServlet", urlPatterns = {"/template-version"})
-public class TemplateVersionServlet extends HttpServlet {
+@WebServlet(name = "CreateTemplateId", urlPatterns = {"/createTemplateId"})
+public class CreateTemplateId extends HttpServlet {
     
-    private static final Logger logger = LogManager.getLogger(TemplateVersionServlet.class);
+    private static final Logger logger = LogManager.getLogger(CreateTemplateId.class);
     private static final long serialVersionUID = 1L;
     
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        logger.info("TemplateVersionServlet - GET request received, redirecting to template-version.html");
-        response.sendRedirect("template-version.html");
+        logger.info("CreateTemplateId - GET request received, redirecting to create-a-dynamic-template.html");
+        response.sendRedirect("create-a-dynamic-template.html");
     }
     
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        logger.info("TemplateVersionServlet - POST request received");
+        logger.info("CreateTemplateId - POST request received");
         
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
@@ -46,35 +47,42 @@ public class TemplateVersionServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
         JSONObject jsonResponse = new JSONObject();
         
-        // Get parameters from request
-        String templateId = request.getParameter("template_id");
-        String active = request.getParameter("active");
-        String name = request.getParameter("name");
-        String htmlContent = request.getParameter("html_content");
-        String generatePlainContent = request.getParameter("generate_plain_content");
-        String subject = request.getParameter("subject");
-        String updatedAt = request.getParameter("updated_at");
-        String editor = request.getParameter("editor");
+        String templateName = request.getParameter("templateName");
         
-        // Validate required fields
-        if (templateId == null || templateId.trim().isEmpty()) {
+        // Validate input
+        if (templateName == null || templateName.trim().isEmpty()) {
             jsonResponse.put("success", false);
-            jsonResponse.put("error", "Template ID is required");
+            jsonResponse.put("error", "Template name is required");
             out.print(jsonResponse.toString());
             out.flush();
             return;
         }
         
-        if (name == null || name.trim().isEmpty()) {
+        // Normalize template name (trim and convert to lowercase)
+        final String normalizedTemplateName = templateName.trim().toLowerCase();
+        
+        // Validate template name pattern (SendGrid requirements: lowercase, alphanumeric, underscores, hyphens)
+        if (!normalizedTemplateName.matches("^[a-z0-9_-]+$")) {
             jsonResponse.put("success", false);
-            jsonResponse.put("error", "Version name is required");
+            jsonResponse.put("error", "Template name must contain only lowercase letters, numbers, underscores, and hyphens. Example: welcome_email or my-template-123");
             out.print(jsonResponse.toString());
             out.flush();
             return;
         }
         
-        // Get API key
+        // Additional validation: must start with a letter or number
+        if (normalizedTemplateName.isEmpty() || !Character.isLetterOrDigit(normalizedTemplateName.charAt(0))) {
+            jsonResponse.put("success", false);
+            jsonResponse.put("error", "Template name must start with a letter or number");
+            out.print(jsonResponse.toString());
+            out.flush();
+            return;
+        }
+        
+        // Get API key from properties file or environment variable
         String apiKey = getApiKey();
+        
+        // Check if API key is set
         if (apiKey == null || apiKey.trim().isEmpty()) {
             logger.error("SendGrid API key is not configured");
             jsonResponse.put("success", false);
@@ -85,62 +93,38 @@ public class TemplateVersionServlet extends HttpServlet {
         }
         
         try {
-            // Build request body
-            JSONObject requestBody = new JSONObject();
-            requestBody.put("template_id", templateId.trim());
-            requestBody.put("active", active != null && !active.trim().isEmpty() ? Integer.parseInt(active) : 1);
-            requestBody.put("name", name.trim());
-            requestBody.put("html_content", htmlContent != null ? htmlContent : "<!doctype><html><body></body></html>");
-            requestBody.put("generate_plain_content", generatePlainContent != null && 
-                          (generatePlainContent.equals("true") || generatePlainContent.equals("1")));
-            requestBody.put("subject", subject != null ? subject : "");
-            if (updatedAt != null && !updatedAt.trim().isEmpty()) {
-                requestBody.put("updated_at", updatedAt.trim());
-            }
-            requestBody.put("editor", editor != null ? editor : "code");
+            // Initialize SendGrid client
+            SendGrid sg = new SendGrid(apiKey);
+            Request sgRequest = new Request();
             
-            // Make POST request to SendGrid API
-            String apiUrl = "https://api.sendgrid.com/v3/templates/" + templateId.trim() + "/versions";
-            URL url = new URL(apiUrl);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("POST");
-            connection.setRequestProperty("Authorization", "Bearer " + apiKey);
-            connection.setRequestProperty("Content-Type", "application/json");
-            connection.setDoOutput(true);
+            // Set request method and endpoint
+            sgRequest.setMethod(Method.POST);
+            sgRequest.setEndpoint("/templates");
             
-            // Write request body
-            connection.getOutputStream().write(requestBody.toString().getBytes("UTF-8"));
-            
-            logger.info("Sending request to SendGrid API: " + apiUrl);
-            logger.info("Request body: " + requestBody.toString());
-            
-            int statusCode = connection.getResponseCode();
-            String responseBody;
-            
-            if (statusCode >= 200 && statusCode < 300) {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                StringBuilder responseBuilder = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    responseBuilder.append(line);
+            // Create request body with user-provided template name
+            JSONObject requestBody = new JSONObject(new HashMap<String, Object>() {
+                {
+                    put("name", normalizedTemplateName);
+                    put("generation", "dynamic");
                 }
-                reader.close();
-                responseBody = responseBuilder.toString();
-            } else {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
-                StringBuilder responseBuilder = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    responseBuilder.append(line);
-                }
-                reader.close();
-                responseBody = responseBuilder.toString();
-            }
+            });
+            
+            sgRequest.setBody(requestBody.toString());
+            
+            logger.info("Sending request to SendGrid API with template name: " + normalizedTemplateName);
+            
+            // Execute API call
+            Response sgResponse = sg.api(sgRequest);
+            
+            int statusCode = sgResponse.getStatusCode();
+            String responseBody = sgResponse.getBody();
+            String responseHeaders = sgResponse.getHeaders().toString();
             
             logger.info("SendGrid API Response - Status Code: " + statusCode);
             
             // Check if the response indicates an error
             if (statusCode >= 400) {
+                // Try to parse error message from response body
                 String errorMessage = "SendGrid API error";
                 try {
                     JSONObject errorJson = new JSONObject(responseBody);
@@ -162,6 +146,7 @@ public class TemplateVersionServlet extends HttpServlet {
                         errorMessage = errorJson.getString("message");
                     }
                 } catch (Exception e) {
+                    // If parsing fails, use the raw response body
                     if (responseBody != null && !responseBody.isEmpty()) {
                         errorMessage = responseBody;
                     }
@@ -173,16 +158,11 @@ public class TemplateVersionServlet extends HttpServlet {
                 jsonResponse.put("responseBody", responseBody);
             } else {
                 // Success response
-                try {
-                    JSONObject sendGridResponse = new JSONObject(responseBody);
-                    jsonResponse.put("success", true);
-                    jsonResponse.put("statusCode", statusCode);
-                    jsonResponse.put("data", sendGridResponse);
-                } catch (Exception e) {
-                    jsonResponse.put("success", true);
-                    jsonResponse.put("statusCode", statusCode);
-                    jsonResponse.put("responseBody", responseBody);
-                }
+                jsonResponse.put("success", true);
+                jsonResponse.put("templateName", normalizedTemplateName);
+                jsonResponse.put("statusCode", statusCode);
+                jsonResponse.put("responseBody", responseBody);
+                jsonResponse.put("responseHeaders", responseHeaders);
             }
             
         } catch (IOException ex) {

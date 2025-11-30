@@ -138,3 +138,4 @@ Make sure to configure your Azure credentials and set the `SENDGRID_API_KEY` env
 ## License
 
 This project is open source and available for use.
+# sendgridbasic

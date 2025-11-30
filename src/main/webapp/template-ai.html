@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Template Version - SendGrid Basic</title>
+    <title>Create Template with AI - SendGrid Basic</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
         .response-container {
@@ -74,9 +74,10 @@
             </div>
             <ul class="nav-menu">
                 <li><a href="home.html">Home</a></li>
-                <li><a href="template.html">Create Template</a></li>
-                <li><a href="templates.html">View Templates</a></li>
-                <li><a href="template-version.html">Send Email Template code</a></li>
+                <li><a href="create-a-dynamic-template.html">Create Template</a></li>
+                <li><a href="templates-lists.html">View Templates</a></li>
+                <li><a href="send-email-template-code.html">Send Email Template code</a></li>
+                <li><a href="template-ai.html">Create Template with AI</a></li>
             </ul>
         </div>
     </nav>
@@ -84,8 +85,8 @@
     <main class="main-content">
         <div class="container">
             <div class="page-header">
-                <h1>Create Template Version</h1>
-                <p>Create a new version for an existing SendGrid dynamic email template</p>
+                <h1>Create Template with AI</h1>
+                <p>Generate email template HTML content using AI and create a new version for an existing SendGrid dynamic email template</p>
             </div>
 
             <div id="errorAlert" class="alert alert-error"></div>
@@ -93,7 +94,7 @@
             <div id="loading" class="loading">Loading templates...</div>
 
             <div class="contact-form-container">
-                <form id="versionForm" class="contact-form">
+                <form id="aiForm" class="contact-form">
                     <div class="form-group">
                         <label for="template_id">Select Template *</label>
                         <select id="template_id" name="template_id" required class="form-input">
@@ -117,15 +118,16 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="page_url">Fetch HTML from URL *</label>
-                        <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
-                            <input type="url" id="page_url" name="page_url" required
-                                   class="form-input" placeholder="https://example.com"
-                                   style="flex: 1;">
-                            <button type="button" id="fetchBtn" class="btn btn-secondary" style="white-space: nowrap;">Fetch HTML</button>
+                        <label for="ai_prompt">AI Prompt *</label>
+                        <textarea id="ai_prompt" name="ai_prompt" required
+                                  class="form-input form-textarea" 
+                                  placeholder="e.g., Create a professional welcome email template with a header, body content, and footer. Use modern styling with colors blue and white."
+                                  style="min-height: 100px;"></textarea>
+                        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                            <button type="button" id="generateBtn" class="btn btn-secondary" style="white-space: nowrap;">Generate with AI</button>
                         </div>
-                        <small style="color: #7f8c8d; display: block; margin-bottom: 0.5rem;">
-                            Enter a URL and click "Fetch HTML" to load the page source (required)
+                        <small style="color: #7f8c8d; display: block; margin-top: 0.5rem;">
+                            Enter a description of the email template you want to create, then click "Generate with AI" (required)
                         </small>
                     </div>
 
@@ -133,11 +135,10 @@
                         <label for="html_content">HTML Content *</label>
                         <textarea id="html_content" name="html_content" required
                                   class="form-input form-textarea" 
-                                  placeholder="Use 'Fetch HTML' button above to populate this field"
-                                  readonly
+                                  placeholder="Use 'Generate with AI' button above to populate this field"
                                   style="background-color: #f5f5f5; cursor: not-allowed;"></textarea>
                         <small style="color: #7f8c8d; margin-top: 0.5rem; display: block;">
-                            Use "Fetch HTML" button above to populate this field (required)
+                            Use "Generate with AI" button above to populate this field (required)
                         </small>
                     </div>
 
@@ -266,58 +267,58 @@
             }
         }
 
-        // Fetch HTML from URL
-        document.getElementById('fetchBtn').addEventListener('click', async function() {
-            const pageUrl = document.getElementById('page_url').value.trim();
+        // Generate HTML with AI
+        document.getElementById('generateBtn').addEventListener('click', async function() {
+            const aiPrompt = document.getElementById('ai_prompt').value.trim();
             const errorAlert = document.getElementById('errorAlert');
             const successAlert = document.getElementById('successAlert');
-            const fetchBtn = document.getElementById('fetchBtn');
+            const generateBtn = document.getElementById('generateBtn');
             const htmlContent = document.getElementById('html_content');
             
-            if (!pageUrl) {
-                errorAlert.textContent = 'Please enter a URL';
+            if (!aiPrompt) {
+                errorAlert.textContent = 'Please enter an AI prompt';
                 errorAlert.style.display = 'block';
                 successAlert.style.display = 'none';
                 return;
             }
             
-            // Validate URL format
-            try {
-                new URL(pageUrl);
-            } catch (e) {
-                errorAlert.textContent = 'Please enter a valid URL (e.g., https://example.com)';
-                errorAlert.style.display = 'block';
-                successAlert.style.display = 'none';
-                return;
-            }
-            
-            fetchBtn.disabled = true;
-            fetchBtn.textContent = 'Fetching...';
+            generateBtn.disabled = true;
+            generateBtn.textContent = 'Generating...';
             errorAlert.style.display = 'none';
             successAlert.style.display = 'none';
             
             try {
-                const response = await fetch('/sendGridBasic/page-source?url=' + encodeURIComponent(pageUrl));
+                const formData = new URLSearchParams();
+                formData.append('prompt', aiPrompt);
+                
+                const response = await fetch('/sendGridBasic/template-ai', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: formData.toString()
+                });
+                
                 const data = await response.json();
                 
                 if (data.success) {
                     htmlContent.value = data.html_content;
-                    successAlert.textContent = 'HTML content fetched successfully!';
+                    successAlert.textContent = 'HTML content generated successfully!';
                     successAlert.style.display = 'block';
                 } else {
-                    errorAlert.textContent = data.error || 'Failed to fetch HTML content';
+                    errorAlert.textContent = data.error || 'Failed to generate HTML content';
                     errorAlert.style.display = 'block';
                 }
             } catch (error) {
                 errorAlert.textContent = 'Error: ' + error.message;
                 errorAlert.style.display = 'block';
             } finally {
-                fetchBtn.disabled = false;
-                fetchBtn.textContent = 'Fetch HTML';
+                generateBtn.disabled = false;
+                generateBtn.textContent = 'Generate with AI';
             }
         });
         
-        document.getElementById('versionForm').addEventListener('submit', async function(e) {
+        document.getElementById('aiForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const errorAlert = document.getElementById('errorAlert');
@@ -356,7 +357,7 @@
             }
             
             if (!htmlContent) {
-                errorAlert.textContent = 'HTML content is required. Please use "Fetch HTML" button to populate it.';
+                errorAlert.textContent = 'HTML content is required. Please use "Generate with AI" button to populate it.';
                 errorAlert.style.display = 'block';
                 return;
             }
@@ -380,7 +381,7 @@
                     formData.append('updated_at', updatedAt);
                 }
                 
-                const response = await fetch('/sendGridBasic/template-version', {
+                const response = await fetch('/sendGridBasic/send-template-code', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'

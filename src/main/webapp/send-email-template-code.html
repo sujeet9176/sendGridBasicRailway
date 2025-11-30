@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Template Version - SendGrid Basic</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .response-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+            display: none;
+        }
+        .response-section {
+            margin-bottom: 1.5rem;
+        }
+        .response-section h4 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        .response-code {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .status-success {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .status-error {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .alert {
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 2rem;
+            display: none;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 1rem;
+        }
+        .form-textarea {
+            min-height: 150px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a href="home.html">SendGrid Basic</a>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="home.html">Home</a></li>
+                <li><a href="create-a-dynamic-template.html">Create Template</a></li>
+                <li><a href="templates-lists.html">View Templates</a></li>
+                <li><a href="send-email-template-code.html">Send Email Template code</a></li>
+                <li><a href="template-ai.html">Create Template with AI</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h1>Create Template Version</h1>
+                <p>Create a new version for an existing SendGrid dynamic email template</p>
+            </div>
+
+            <div id="errorAlert" class="alert alert-error"></div>
+            <div id="successAlert" class="alert alert-success"></div>
+            <div id="loading" class="loading">Loading templates...</div>
+
+            <div class="contact-form-container">
+                <form id="versionForm" class="contact-form">
+                    <div class="form-group">
+                        <label for="template_id">Select Template *</label>
+                        <select id="template_id" name="template_id" required class="form-input">
+                            <option value="">-- Loading templates... --</option>
+                        </select>
+                        <small style="color: #7f8c8d; margin-top: 0.5rem; display: block;">
+                            Select a template from the list
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="name">Version Name *</label>
+                        <input type="text" id="name" name="name" required 
+                               class="form-input" placeholder="e.g., v1">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="subject">Subject *</label>
+                        <input type="text" id="subject" name="subject" required
+                               class="form-input" placeholder="e.g., subject test">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="page_url">Fetch HTML from URL *</label>
+                        <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <input type="url" id="page_url" name="page_url" required
+                                   class="form-input" placeholder="https://example.com"
+                                   style="flex: 1;">
+                            <button type="button" id="fetchBtn" class="btn btn-secondary" style="white-space: nowrap;">Fetch HTML</button>
+                        </div>
+                        <small style="color: #7f8c8d; display: block; margin-bottom: 0.5rem;">
+                            Enter a URL and click "Fetch HTML" to load the page source (required)
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="html_content">HTML Content *</label>
+                        <textarea id="html_content" name="html_content" required
+                                  class="form-input form-textarea" 
+                                  placeholder="Use 'Fetch HTML' button above to populate this field"
+                                  readonly
+                                  style="background-color: #f5f5f5; cursor: not-allowed;"></textarea>
+                        <small style="color: #7f8c8d; margin-top: 0.5rem; display: block;">
+                            Use "Fetch HTML" button above to populate this field (required)
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="active">Active</label>
+                        <select id="active" name="active" class="form-input">
+                            <option value="1" selected>Yes (1)</option>
+                            <option value="0">No (0)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="generate_plain_content">Generate Plain Content</label>
+                        <select id="generate_plain_content" name="generate_plain_content" class="form-input">
+                            <option value="true" selected>Yes</option>
+                            <option value="false">No</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editor">Editor</label>
+                        <select id="editor" name="editor" class="form-input">
+                            <option value="code" selected>Code</option>
+                            <option value="design">Design</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="updated_at">Updated At</label>
+                        <input type="text" id="updated_at" name="updated_at" 
+                               class="form-input" readonly
+                               style="background-color: #f5f5f5; cursor: not-allowed;">
+                        <small style="color: #7f8c8d; margin-top: 0.5rem; display: block;">
+                            Automatically set to current system time
+                        </small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="submitBtn">Send Email Template code</button>
+                </form>
+            </div>
+
+            <div id="responseContainer" class="response-container">
+                <h3>API Response</h3>
+                
+                <div class="response-section">
+                    <h4>Status Code</h4>
+                    <p id="responseStatusCode"></p>
+                </div>
+
+                <div class="response-section">
+                    <h4>Response Body</h4>
+                    <div class="response-code" id="responseBody"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 SendGrid Basic. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        let templatesData = [];
+
+        // Load templates on page load and set current time
+        window.addEventListener('DOMContentLoaded', function() {
+            loadTemplates();
+            setCurrentDateTime();
+        });
+
+        // Set current system time for updated_at field
+        function setCurrentDateTime() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const currentDateTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            document.getElementById('updated_at').value = currentDateTime;
+        }
+
+        async function loadTemplates() {
+            const errorAlert = document.getElementById('errorAlert');
+            const loading = document.getElementById('loading');
+            const templateSelect = document.getElementById('template_id');
+
+            try {
+                const response = await fetch('/sendGridBasic/templates');
+                const data = await response.json();
+
+                loading.style.display = 'none';
+
+                if (data.success) {
+                    templatesData = data.data || [];
+                    
+                    // Clear existing options
+                    templateSelect.innerHTML = '<option value="">-- Select a template --</option>';
+
+                    if (templatesData.length === 0) {
+                        errorAlert.textContent = 'No templates found. Create a template first.';
+                        errorAlert.style.display = 'block';
+                        templateSelect.innerHTML = '<option value="">-- No templates available --</option>';
+                    } else {
+                        // Populate dropdown with template names (but values are template IDs)
+                        templatesData.forEach(template => {
+                            const option = document.createElement('option');
+                            option.value = template.id; // Send ID to backend
+                            option.textContent = template.name || template.id; // Show name to user
+                            templateSelect.appendChild(option);
+                        });
+                    }
+                } else {
+                    errorAlert.textContent = data.error || 'Failed to load templates';
+                    errorAlert.style.display = 'block';
+                    templateSelect.innerHTML = '<option value="">-- Error loading templates --</option>';
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                errorAlert.textContent = 'Error loading templates: ' + error.message;
+                errorAlert.style.display = 'block';
+                templateSelect.innerHTML = '<option value="">-- Error loading templates --</option>';
+            }
+        }
+
+        // Fetch HTML from URL
+        document.getElementById('fetchBtn').addEventListener('click', async function() {
+            const pageUrl = document.getElementById('page_url').value.trim();
+            const errorAlert = document.getElementById('errorAlert');
+            const successAlert = document.getElementById('successAlert');
+            const fetchBtn = document.getElementById('fetchBtn');
+            const htmlContent = document.getElementById('html_content');
+            
+            if (!pageUrl) {
+                errorAlert.textContent = 'Please enter a URL';
+                errorAlert.style.display = 'block';
+                successAlert.style.display = 'none';
+                return;
+            }
+            
+            // Validate URL format
+            try {
+                new URL(pageUrl);
+            } catch (e) {
+                errorAlert.textContent = 'Please enter a valid URL (e.g., https://example.com)';
+                errorAlert.style.display = 'block';
+                successAlert.style.display = 'none';
+                return;
+            }
+            
+            fetchBtn.disabled = true;
+            fetchBtn.textContent = 'Fetching...';
+            errorAlert.style.display = 'none';
+            successAlert.style.display = 'none';
+            
+            try {
+                const response = await fetch('/sendGridBasic/page-source?url=' + encodeURIComponent(pageUrl));
+                const data = await response.json();
+                
+                if (data.success) {
+                    htmlContent.value = data.html_content;
+                    successAlert.textContent = 'HTML content fetched successfully!';
+                    successAlert.style.display = 'block';
+                } else {
+                    errorAlert.textContent = data.error || 'Failed to fetch HTML content';
+                    errorAlert.style.display = 'block';
+                }
+            } catch (error) {
+                errorAlert.textContent = 'Error: ' + error.message;
+                errorAlert.style.display = 'block';
+            } finally {
+                fetchBtn.disabled = false;
+                fetchBtn.textContent = 'Fetch HTML';
+            }
+        });
+        
+        document.getElementById('versionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const errorAlert = document.getElementById('errorAlert');
+            const successAlert = document.getElementById('successAlert');
+            const loading = document.getElementById('loading');
+            const responseContainer = document.getElementById('responseContainer');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Hide previous messages
+            errorAlert.style.display = 'none';
+            successAlert.style.display = 'none';
+            responseContainer.style.display = 'none';
+            
+            // Validate required fields
+            const templateId = document.getElementById('template_id').value.trim();
+            const name = document.getElementById('name').value.trim();
+            const subject = document.getElementById('subject').value.trim();
+            const htmlContent = document.getElementById('html_content').value.trim();
+            
+            if (!templateId) {
+                errorAlert.textContent = 'Template selection is required';
+                errorAlert.style.display = 'block';
+                return;
+            }
+            
+            if (!name) {
+                errorAlert.textContent = 'Version name is required';
+                errorAlert.style.display = 'block';
+                return;
+            }
+            
+            if (!subject) {
+                errorAlert.textContent = 'Subject is required';
+                errorAlert.style.display = 'block';
+                return;
+            }
+            
+            if (!htmlContent) {
+                errorAlert.textContent = 'HTML content is required. Please use "Fetch HTML" button to populate it.';
+                errorAlert.style.display = 'block';
+                return;
+            }
+            
+            // Show loading
+            loading.style.display = 'block';
+            submitBtn.disabled = true;
+            
+            try {
+                // Build form data
+                const formData = new URLSearchParams();
+                formData.append('template_id', templateId);
+                formData.append('name', name);
+                formData.append('subject', document.getElementById('subject').value);
+                formData.append('html_content', document.getElementById('html_content').value);
+                formData.append('active', document.getElementById('active').value);
+                formData.append('generate_plain_content', document.getElementById('generate_plain_content').value);
+                formData.append('editor', document.getElementById('editor').value);
+                const updatedAt = document.getElementById('updated_at').value.trim();
+                if (updatedAt) {
+                    formData.append('updated_at', updatedAt);
+                }
+                
+                const response = await fetch('/sendGridBasic/send-template-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: formData.toString()
+                });
+                
+                const data = await response.json();
+                
+                loading.style.display = 'none';
+                submitBtn.disabled = false;
+                
+                if (data.success) {
+                    successAlert.textContent = 'Success! Template version created successfully.';
+                    successAlert.style.display = 'block';
+                    
+                    // Display response
+                    document.getElementById('responseStatusCode').textContent = data.statusCode;
+                    document.getElementById('responseStatusCode').className = 
+                        (data.statusCode >= 200 && data.statusCode < 300) ? 'status-success' : 'status-error';
+                    
+                    if (data.data) {
+                        document.getElementById('responseBody').textContent = JSON.stringify(data.data, null, 2);
+                    } else {
+                        document.getElementById('responseBody').textContent = data.responseBody || 'No response body';
+                    }
+                    responseContainer.style.display = 'block';
+                } else {
+                    errorAlert.textContent = data.error || 'An error occurred';
+                    errorAlert.style.display = 'block';
+                    
+                    // Show error response
+                    if (data.responseBody) {
+                        document.getElementById('responseStatusCode').textContent = data.statusCode || 'N/A';
+                        document.getElementById('responseStatusCode').className = 'status-error';
+                        document.getElementById('responseBody').textContent = data.responseBody;
+                        responseContainer.style.display = 'block';
+                    }
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                submitBtn.disabled = false;
+                errorAlert.textContent = 'Error: ' + error.message;
+                errorAlert.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
+
