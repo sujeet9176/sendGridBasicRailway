@@ -127,6 +127,34 @@
                         </goals>
                         <configuration>
                             <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            <includeScope>runtime</includeScope>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <id>create-embedded-server-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>embedded-server</classifier>
+                            <includes>
+                                <include>com/sendgrid/EmbeddedTomcatServer.class</include>
+                            </includes>
+                            <archive>
+                                <manifest>
+                                    <mainClass>com.sendgrid.EmbeddedTomcatServer</mainClass>
+                                    <addClasspath>true</addClasspath>
+                                    <classpathPrefix>lib/</classpathPrefix>
+                                </manifest>
+                            </archive>
                         </configuration>
                     </execution>
                 </executions>
