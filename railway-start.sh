@@ -2,7 +2,7 @@
 
 # Railway startup script for SendGrid Basic Railway
 
-set -e  # Exit on error
+# Don't use set -e, we want to handle errors gracefully
 
 WAR_FILE="target/sendGridBasicRailway.war"
 
@@ -84,5 +84,11 @@ echo "Classpath: $CLASSPATH"
 echo ""
 
 # Run with explicit classpath
-java -cp "$CLASSPATH" com.sendgrid.EmbeddedTomcatServer
+echo "Executing: java -cp [classpath] com.sendgrid.EmbeddedTomcatServer"
+java -cp "$CLASSPATH" com.sendgrid.EmbeddedTomcatServer || {
+    echo ""
+    echo "ERROR: Failed to start EmbeddedTomcatServer"
+    echo "Exit code: $?"
+    exit 1
+}
 
