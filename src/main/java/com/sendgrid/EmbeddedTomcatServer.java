@@ -98,30 +98,49 @@ public class EmbeddedTomcatServer {
     }
     
     private static String findWarFile() {
+        String userDir = System.getProperty("user.dir");
+        System.out.println("Current working directory: " + userDir);
+        
         // Try multiple locations where the WAR might be
         String[] possiblePaths = {
             "target/sendGridBasicRailway.war",
+            userDir + "/target/sendGridBasicRailway.war",
             "sendGridBasicRailway.war",
-            "../target/sendGridBasicRailway.war",
-            System.getProperty("user.dir") + "/target/sendGridBasicRailway.war"
+            userDir + "/sendGridBasicRailway.war",
+            "../target/sendGridBasicRailway.war"
         };
         
+        System.out.println("Searching for WAR file...");
         for (String path : possiblePaths) {
             File file = new File(path);
+            System.out.println("  Checking: " + path + " -> " + file.getAbsolutePath() + " (exists: " + file.exists() + ")");
             if (file.exists() && file.isFile()) {
+                System.out.println("  Found WAR file at: " + file.getAbsolutePath());
                 return file.getAbsolutePath();
             }
         }
         
         // If WAR not found, try to find any WAR file in target directory
+        System.out.println("WAR not found in standard locations, searching target directory...");
         File targetDir = new File("target");
-        if (targetDir.exists() && targetDir.isDirectory()) {
-            File[] files = targetDir.listFiles((dir, name) -> name.endsWith(".war"));
-            if (files != null && files.length > 0) {
-                return files[0].getAbsolutePath();
-            }
+        if (!targetDir.exists()) {
+            targetDir = new File(userDir + "/target");
         }
         
+        if (targetDir.exists() && targetDir.isDirectory()) {
+            System.out.println("  Target directory exists: " + targetDir.getAbsolutePath());
+            File[] files = targetDir.listFiles((dir, name) -> name.endsWith(".war"));
+            if (files != null && files.length > 0) {
+                System.out.println("  Found WAR file: " + files[0].getAbsolutePath());
+                return files[0].getAbsolutePath();
+            } else {
+                System.out.println("  No WAR files found in target directory");
+            }
+        } else {
+            System.out.println("  Target directory does not exist: " + targetDir.getAbsolutePath());
+        }
+        
+        System.out.println("ERROR: Could not find WAR file in any location");
         return null;
     }
     
