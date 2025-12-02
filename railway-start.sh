@@ -62,6 +62,16 @@ fi
 
 echo "Found EmbeddedTomcatServer.class: $CLASS_FILE"
 
+# Verify we can actually see the class file
+if [ ! -f "$CLASS_FILE" ]; then
+    echo "ERROR: Class file verification failed!"
+    exit 1
+fi
+
+# Try to verify the class can be found (basic check)
+echo "Verifying class file is readable..."
+ls -lh "$CLASS_FILE"
+
 # Build classpath by expanding wildcards (Java doesn't always handle * in classpath)
 build_classpath() {
     local classpath=""
