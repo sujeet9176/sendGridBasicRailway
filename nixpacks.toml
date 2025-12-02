@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = { maven = "3.9", jdk = "11" }
+
+[phases.build]
+cmds = [
+  "mvn clean package -DskipTests"
+]
+
+[phases.start]
+cmd = "sh railway-start.sh"
+

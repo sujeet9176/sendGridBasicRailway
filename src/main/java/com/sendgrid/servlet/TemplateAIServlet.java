@@ -285,8 +285,9 @@ public class TemplateAIServlet extends HttpServlet {
                 String template = templateBuilder.toString();
                 
                 // Replace the placeholder with AI-generated content
-                String placeholder = "<!-- AI Code goes here Start -->\n        <!-- AI Code goes here End-->";
-                String replacement = "<!-- AI Code goes here Start -->\n        " + aiContent + "\n        <!-- AI Code goes here End-->";
+                // Match the exact indentation from the template file (28 spaces)
+                String placeholder = "                            <!-- AI Code goes here Start -->\n                            <!-- AI Code goes here End-->";
+                String replacement = "                            <!-- AI Code goes here Start -->\n                            " + aiContent + "\n                            <!-- AI Code goes here End-->";
                 
                 return template.replace(placeholder, replacement);
             }

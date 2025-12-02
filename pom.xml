@@ -3,11 +3,11 @@
     <modelVersion>4.0.0</modelVersion>
     
     <groupId>com.sendgrid</groupId>
-    <artifactId>sendGridBasic</artifactId>
+    <artifactId>sendGridBasicRailway</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>war</packaging>
     
-    <name>SendGrid Basic Web Application</name>
+    <name>SendGrid Basic Railway Web Application</name>
     <description>A dynamic web application with SendGrid integration</description>
     
     <properties>
@@ -78,10 +78,27 @@
             <artifactId>sendgrid-java</artifactId>
             <version>4.10.1</version>
         </dependency>
+        
+        <!-- Embedded Tomcat for Railway deployment -->
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-core</artifactId>
+            <version>9.0.85</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-jasper</artifactId>
+            <version>9.0.85</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-websocket</artifactId>
+            <version>9.0.85</version>
+        </dependency>
     </dependencies>
     
     <build>
-        <finalName>sendGridBasic</finalName>
+        <finalName>sendGridBasicRailway</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -96,6 +113,28 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
                 <version>3.3.2</version>
+                <configuration>
+                    <packagingExcludes>
+                        WEB-INF/classes/com/sendgrid/EmbeddedTomcatServer.class
+                    </packagingExcludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.tomcat.maven</groupId>

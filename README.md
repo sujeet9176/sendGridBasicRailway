@@ -1,6 +1,6 @@
-# SendGrid Basic - Template Creation Web Application
+# SendGrid Basic Railway - Template Creation Web Application
 
-A simple Java web application for creating SendGrid dynamic email templates via a web interface.
+A simple Java web application for creating SendGrid dynamic email templates via a web interface, configured for Railway deployment.
 
 ## Features
 
@@ -9,19 +9,25 @@ A simple Java web application for creating SendGrid dynamic email templates via 
 - **HTML/JavaScript** - Modern client-side interface
 - **Log4j2** - Comprehensive logging
 - **Maven Build** - Standard Maven project structure
+- **Railway Ready** - Pre-configured for Railway platform deployment
 
 ## Project Structure
 
 ```
-sendGridBasic/
+sendGridBasicRailway/
 ├── pom.xml                          # Maven configuration
+├── railway.json                     # Railway deployment configuration
+├── Procfile                         # Railway process file
+├── nixpacks.toml                    # Railway build configuration
 ├── src/
 │   ├── main/
 │   │   ├── java/
-│   │   │   └── com/sendgrid/servlet/
-│   │   │       └── TemplateServlet.java
+│   │   │   ├── com/sendgrid/
+│   │   │   │   ├── servlet/        # Servlet classes
+│   │   │   │   └── EmbeddedTomcatServer.java  # Embedded Tomcat for Railway
 │   │   ├── resources/
-│   │   │   └── log4j2.xml          # Logging configuration
+│   │   │   ├── log4j2.xml          # Logging configuration
+│   │   │   └── sendgrid.properties # Configuration file
 │   │   └── webapp/
 │   │       ├── WEB-INF/
 │   │       │   └── web.xml         # Web application configuration
@@ -29,8 +35,7 @@ sendGridBasic/
 │   │       │   └── style.css
 │   │       ├── js/
 │   │       │   └── main.js
-│   │       ├── index.html
-│   │       └── template.html
+│   │       └── *.html              # HTML pages
 └── README.md
 ```
 
@@ -66,10 +71,23 @@ mvn tomcat7:run
 
 ### Option 2: Deploy to Tomcat Server
 
-1. Copy the `target/sendGridBasic.war` file to your Tomcat `webapps/` directory
+1. Copy the `target/sendGridBasicRailway.war` file to your Tomcat `webapps/` directory
 2. Set the `SENDGRID_API_KEY` environment variable
 3. Start Tomcat server
-4. Access the application at `http://localhost:8080/sendGridBasic`
+4. Access the application at `http://localhost:8080/sendGridBasicRailway`
+
+### Option 3: Run with Embedded Tomcat (Railway-style)
+
+```bash
+# Build the project
+mvn clean package
+
+# Run with embedded Tomcat
+java -cp target/lib/*:target/sendGridBasicRailway.war com.sendgrid.EmbeddedTomcatServer
+
+# The application will be available at http://localhost:8080
+# Or use PORT environment variable: PORT=3000 java -cp ...
+```
 
 ## Usage
 
@@ -125,6 +143,65 @@ SENDGRID_API_KEY=your_api_key_here mvn tomcat7:run
 
 ## Deployment
 
+### Railway Deployment
+
+This application is configured for Railway platform deployment. Follow these steps:
+
+#### Prerequisites
+1. A Railway account (sign up at [railway.app](https://railway.app))
+2. Railway CLI installed (optional, but recommended)
+3. Git repository (GitHub, GitLab, or Bitbucket)
+
+#### Deployment Steps
+
+1. **Push your code to a Git repository** (GitHub, GitLab, or Bitbucket)
+
+2. **Create a new Railway project:**
+   - Go to [railway.app](https://railway.app)
+   - Click "New Project"
+   - Select "Deploy from GitHub repo" (or your Git provider)
+   - Select your repository
+
+3. **Configure Environment Variables:**
+   Railway will automatically detect the Java project. You need to set these environment variables in Railway:
+   - `SENDGRID_API_KEY` - Your SendGrid API key
+   - `OPENAI_API_KEY` - Your OpenAI API key (if using AI features)
+   - `PORT` - Railway automatically sets this, but you can override if needed
+
+   To set environment variables:
+   - Go to your Railway project
+   - Click on "Variables" tab
+   - Add the required environment variables
+
+4. **Deploy:**
+   - Railway will automatically build and deploy when you push to your repository
+   - Or click "Deploy" in the Railway dashboard
+
+5. **Access your application:**
+   - Railway will provide a URL like `https://your-app-name.up.railway.app`
+   - Your application will be available at the root path (e.g., `https://your-app-name.up.railway.app/home.html`)
+
+#### Railway Configuration Files
+
+The project includes these Railway-specific files:
+- `railway.json` - Railway deployment configuration
+- `Procfile` - Process file for Railway
+- `nixpacks.toml` - Build configuration for Railway
+
+#### Build Process
+
+Railway will:
+1. Detect the Java/Maven project
+2. Run `mvn clean package` to build the WAR file
+3. Start the application using the embedded Tomcat server
+4. The application will listen on the PORT environment variable (Railway provides this automatically)
+
+#### Troubleshooting
+
+- **Build fails:** Check that Java 11 and Maven are available (configured in `nixpacks.toml`)
+- **Application won't start:** Check logs in Railway dashboard, ensure PORT environment variable is set
+- **API calls fail:** Verify `SENDGRID_API_KEY` and `OPENAI_API_KEY` are set correctly in Railway environment variables
+
 ### Azure Deployment
 
 The project includes Azure Web App Maven plugin configuration. To deploy:
@@ -138,4 +215,3 @@ Make sure to configure your Azure credentials and set the `SENDGRID_API_KEY` env
 ## License
 
 This project is open source and available for use.
-# sendgridbasic

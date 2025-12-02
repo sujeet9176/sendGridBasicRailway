@@ -147,7 +147,7 @@
             loading.style.display = 'block';
 
             try {
-                const response = await fetch('/sendGridBasic/templates');
+                const response = await fetch('/templates');
                 const data = await response.json();
 
                 loading.style.display = 'none';

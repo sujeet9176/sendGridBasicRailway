@@ -184,7 +184,7 @@
                 const formData = new URLSearchParams();
                 formData.append('templateName', templateName);
                 
-                const response = await fetch('createTemplateId', {
+                const response = await fetch('/createTemplateId', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'

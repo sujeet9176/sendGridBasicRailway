@@ -230,7 +230,7 @@
             const templateSelect = document.getElementById('template_id');
 
             try {
-                const response = await fetch('/sendGridBasic/templates');
+                const response = await fetch('/templates');
                 const data = await response.json();
 
                 loading.style.display = 'none';
@@ -298,7 +298,7 @@
             successAlert.style.display = 'none';
             
             try {
-                const response = await fetch('/sendGridBasic/page-source?url=' + encodeURIComponent(pageUrl));
+                const response = await fetch('/page-source?url=' + encodeURIComponent(pageUrl));
                 const data = await response.json();
                 
                 if (data.success) {
@@ -381,7 +381,7 @@
                     formData.append('updated_at', updatedAt);
                 }
                 
-                const response = await fetch('/sendGridBasic/send-template-code', {
+                const response = await fetch('/send-template-code', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'

@@ -135,10 +135,9 @@
                         <label for="html_content">HTML Content *</label>
                         <textarea id="html_content" name="html_content" required
                                   class="form-input form-textarea" 
-                                  placeholder="Use 'Generate with AI' button above to populate this field"
-                                  style="background-color: #f5f5f5; cursor: not-allowed;"></textarea>
+                                  placeholder="Use 'Generate with AI' button above to populate this field, or edit manually"></textarea>
                         <small style="color: #7f8c8d; margin-top: 0.5rem; display: block;">
-                            Use "Generate with AI" button above to populate this field (required)
+                            Use "Generate with AI" button above to populate this field, or edit manually (required)
                         </small>
                     </div>
 
@@ -230,7 +229,7 @@
             const templateSelect = document.getElementById('template_id');
 
             try {
-                const response = await fetch('/sendGridBasic/templates');
+                const response = await fetch('/templates');
                 const data = await response.json();
 
                 loading.style.display = 'none';
@@ -291,7 +290,7 @@
                 const formData = new URLSearchParams();
                 formData.append('prompt', aiPrompt);
                 
-                const response = await fetch('/sendGridBasic/template-ai', {
+                const response = await fetch('/template-ai', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -381,7 +380,7 @@
                     formData.append('updated_at', updatedAt);
                 }
                 
-                const response = await fetch('/sendGridBasic/send-template-code', {
+                const response = await fetch('/send-template-code', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'

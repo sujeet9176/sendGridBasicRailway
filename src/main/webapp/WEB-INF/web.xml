@@ -12,14 +12,14 @@
         <welcome-file>index.html</welcome-file>
     </welcome-file-list>
     
-    <!-- Template Servlet -->
+    <!-- Create Template ID Servlet -->
     <servlet>
-        <servlet-name>TemplateServlet</servlet-name>
-        <servlet-class>com.sendgrid.servlet.TemplateServlet</servlet-class>
+        <servlet-name>CreateTemplateId</servlet-name>
+        <servlet-class>com.sendgrid.servlet.CreateTemplateId</servlet-class>
     </servlet>
     <servlet-mapping>
-        <servlet-name>TemplateServlet</servlet-name>
-        <url-pattern>/template</url-pattern>
+        <servlet-name>CreateTemplateId</servlet-name>
+        <url-pattern>/createTemplateId</url-pattern>
     </servlet-mapping>
     
     <!-- Template List Servlet -->
@@ -32,14 +32,14 @@
         <url-pattern>/templates</url-pattern>
     </servlet-mapping>
     
-    <!-- Template Version Servlet -->
+    <!-- Send Email Template Code Servlet -->
     <servlet>
-        <servlet-name>TemplateVersionServlet</servlet-name>
-        <servlet-class>com.sendgrid.servlet.TemplateVersionServlet</servlet-class>
+        <servlet-name>SentEmailTemplateCode</servlet-name>
+        <servlet-class>com.sendgrid.servlet.SentEmailTemplateCode</servlet-class>
     </servlet>
     <servlet-mapping>
-        <servlet-name>TemplateVersionServlet</servlet-name>
-        <url-pattern>/template-version</url-pattern>
+        <servlet-name>SentEmailTemplateCode</servlet-name>
+        <url-pattern>/send-template-code</url-pattern>
     </servlet-mapping>
     
     <!-- Page Source Servlet -->
@@ -50,6 +50,16 @@
     <servlet-mapping>
         <servlet-name>PageSourceServlet</servlet-name>
         <url-pattern>/page-source</url-pattern>
+    </servlet-mapping>
+    
+    <!-- Template AI Servlet -->
+    <servlet>
+        <servlet-name>TemplateAIServlet</servlet-name>
+        <servlet-class>com.sendgrid.servlet.TemplateAIServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>TemplateAIServlet</servlet-name>
+        <url-pattern>/template-ai</url-pattern>
     </servlet-mapping>
     
 </web-app>
