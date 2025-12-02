@@ -2,16 +2,37 @@
 
 # Railway startup script for SendGrid Basic Railway
 
-# Don't use set -e, we want to handle errors gracefully
-
 WAR_FILE="target/sendGridBasicRailway.war"
+SHADE_JAR="target/sendGridBasicRailway-server.jar"
 
 echo "=== Railway Startup Script ==="
 echo "Current directory: $(pwd)"
 echo "Java version:"
 java -version 2>&1
 
-# Ensure we have the WAR file
+# Method 1: Try using the shaded JAR (executable with all dependencies)
+if [ -f "$SHADE_JAR" ]; then
+    echo ""
+    echo "=== Method 1: Using Shaded JAR (Recommended) ==="
+    echo "Found shaded JAR: $SHADE_JAR"
+    
+    # Get absolute path to WAR file for EmbeddedTomcatServer
+    WAR_ABS_PATH="$(cd "$(dirname "$WAR_FILE")" && pwd)/$(basename "$WAR_FILE")"
+    
+    if [ ! -f "$WAR_ABS_PATH" ]; then
+        echo "ERROR: WAR file not found at $WAR_ABS_PATH"
+        exit 1
+    fi
+    
+    echo "WAR file path: $WAR_ABS_PATH"
+    echo "Starting server with shaded JAR..."
+    java -Dwar.file.path="$WAR_ABS_PATH" -jar "$SHADE_JAR"
+    exit $?
+fi
+
+echo "Shaded JAR not found, trying alternative method..."
+
+# Method 2: Extract WAR and use classpath (fallback)
 if [ ! -f "$WAR_FILE" ]; then
     echo "ERROR: WAR file not found at $WAR_FILE"
     echo "Contents of target directory:"
