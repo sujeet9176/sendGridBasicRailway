@@ -26,10 +26,12 @@ EXTRACT_DIR="target/webapp-extracted"
 echo "Extracting WAR file..."
 rm -rf "$EXTRACT_DIR"
 mkdir -p "$EXTRACT_DIR"
-cd "$EXTRACT_DIR"
 
-# Use absolute path for WAR file
-WAR_ABS_PATH="$(cd "$(dirname "../$WAR_FILE")" && pwd)/$(basename "$WAR_FILE")"
+# Get absolute path to WAR file before changing directory
+BASE_DIR="$(pwd)"
+WAR_ABS_PATH="$BASE_DIR/$WAR_FILE"
+
+cd "$EXTRACT_DIR"
 
 if command -v jar &> /dev/null; then
     jar xf "$WAR_ABS_PATH"
@@ -37,7 +39,7 @@ else
     unzip -q "$WAR_ABS_PATH"
 fi
 
-cd - > /dev/null
+cd "$BASE_DIR"
 
 # Verify the class exists
 CLASS_FILE="$EXTRACT_DIR/WEB-INF/classes/com/sendgrid/EmbeddedTomcatServer.class"
