@@ -4,10 +4,13 @@ nixPkgs = ["maven", "jdk"]
 [phases.build]
 cmds = [
   "mvn clean compile package -DskipTests",
-  "echo 'Verifying EmbeddedTomcatServer class exists:'",
-  "find target -name 'EmbeddedTomcatServer.class' || echo 'Class not found in target'",
-  "ls -la target/classes/com/sendgrid/ 2>/dev/null || echo 'Classes directory structure:'",
-  "find target/classes -type f -name '*.class' | head -10 || echo 'No classes found'"
+  "echo '=== Build Verification ==='",
+  "echo 'Checking if EmbeddedTomcatServer was compiled:'",
+  "find target/classes -name 'EmbeddedTomcatServer.class' && echo 'Found in target/classes' || echo 'Not in target/classes'",
+  "echo 'Checking WAR contents:'",
+  "jar tf target/sendGridBasicRailway.war | grep EmbeddedTomcatServer && echo 'Found in WAR' || echo 'Not in WAR'",
+  "echo 'All classes in com/sendgrid:'",
+  "jar tf target/sendGridBasicRailway.war | grep 'com/sendgrid/' | head -10"
 ]
 
 [phases.start]
