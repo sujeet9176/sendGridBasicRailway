@@ -166,6 +166,7 @@
                 <configuration>
                     <mainClass>com.sendgrid.EmbeddedTomcatServer</mainClass>
                     <classpathScope>runtime</classpathScope>
+                    <includePluginDependencies>true</includePluginDependencies>
                 </configuration>
             </plugin>
             <plugin>

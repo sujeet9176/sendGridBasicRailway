@@ -62,29 +62,47 @@ fi
 
 echo "Found EmbeddedTomcatServer.class: $CLASS_FILE"
 
+# Build classpath by expanding wildcards (Java doesn't always handle * in classpath)
+build_classpath() {
+    local classpath=""
+    
+    # Add extracted classes
+    classpath="$EXTRACT_DIR/WEB-INF/classes"
+    
+    # Add libraries from extracted WAR (expand wildcards)
+    if [ -d "$EXTRACT_DIR/WEB-INF/lib" ]; then
+        for jar in "$EXTRACT_DIR/WEB-INF/lib"/*.jar; do
+            if [ -f "$jar" ]; then
+                classpath="$classpath:$jar"
+            fi
+        done
+    fi
+    
+    # Add target/lib for embedded Tomcat dependencies (expand wildcards)
+    if [ -d "target/lib" ]; then
+        for jar in target/lib/*.jar; do
+            if [ -f "$jar" ]; then
+                classpath="$classpath:$jar"
+            fi
+        done
+    fi
+    
+    # Add the WAR file itself
+    classpath="$classpath:$WAR_FILE"
+    
+    echo "$classpath"
+}
+
 # Build classpath
-CLASSPATH="$EXTRACT_DIR/WEB-INF/classes"
-
-# Add libraries from extracted WAR
-if [ -d "$EXTRACT_DIR/WEB-INF/lib" ]; then
-    CLASSPATH="$CLASSPATH:$EXTRACT_DIR/WEB-INF/lib/*"
-fi
-
-# Add target/lib for embedded Tomcat dependencies
-if [ -d "target/lib" ]; then
-    CLASSPATH="$CLASSPATH:target/lib/*"
-fi
-
-# Add the WAR file itself (for EmbeddedTomcatServer to find it)
-CLASSPATH="$CLASSPATH:$WAR_FILE"
+CLASSPATH=$(build_classpath)
 
 # Get absolute path to WAR file
 WAR_ABS_PATH="$(cd "$(dirname "$WAR_FILE")" && pwd)/$(basename "$WAR_FILE")"
 
 echo ""
 echo "=== Starting Embedded Tomcat Server ==="
-echo "Classpath: $CLASSPATH"
 echo "WAR file path: $WAR_ABS_PATH"
+echo "Classpath length: ${#CLASSPATH} characters"
 echo ""
 
 # Run with explicit classpath and WAR file path as system property
@@ -93,6 +111,11 @@ java -cp "$CLASSPATH" -Dwar.file.path="$WAR_ABS_PATH" com.sendgrid.EmbeddedTomca
     echo ""
     echo "ERROR: Failed to start EmbeddedTomcatServer"
     echo "Exit code: $?"
+    echo ""
+    echo "Debugging info:"
+    echo "  Classpath first 500 chars: ${CLASSPATH:0:500}"
+    echo "  Number of JARs in WEB-INF/lib: $(ls -1 "$EXTRACT_DIR/WEB-INF/lib"/*.jar 2>/dev/null | wc -l)"
+    echo "  Number of JARs in target/lib: $(ls -1 target/lib/*.jar 2>/dev/null | wc -l)"
     exit 1
 }
 
