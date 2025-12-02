@@ -98,6 +98,18 @@ public class EmbeddedTomcatServer {
     }
     
     private static String findWarFile() {
+        // First, check if WAR path is provided as system property
+        String warPathProperty = System.getProperty("war.file.path");
+        if (warPathProperty != null && !warPathProperty.trim().isEmpty()) {
+            File warFile = new File(warPathProperty);
+            if (warFile.exists() && warFile.isFile()) {
+                System.out.println("Found WAR file from system property: " + warFile.getAbsolutePath());
+                return warFile.getAbsolutePath();
+            } else {
+                System.out.println("WARNING: WAR file from system property does not exist: " + warPathProperty);
+            }
+        }
+        
         String userDir = System.getProperty("user.dir");
         System.out.println("Current working directory: " + userDir);
         

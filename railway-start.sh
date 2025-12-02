@@ -78,14 +78,18 @@ fi
 # Add the WAR file itself (for EmbeddedTomcatServer to find it)
 CLASSPATH="$CLASSPATH:$WAR_FILE"
 
+# Get absolute path to WAR file
+WAR_ABS_PATH="$(cd "$(dirname "$WAR_FILE")" && pwd)/$(basename "$WAR_FILE")"
+
 echo ""
 echo "=== Starting Embedded Tomcat Server ==="
 echo "Classpath: $CLASSPATH"
+echo "WAR file path: $WAR_ABS_PATH"
 echo ""
 
-# Run with explicit classpath
-echo "Executing: java -cp [classpath] com.sendgrid.EmbeddedTomcatServer"
-java -cp "$CLASSPATH" com.sendgrid.EmbeddedTomcatServer || {
+# Run with explicit classpath and WAR file path as system property
+echo "Executing: java -cp [classpath] -Dwar.file.path=$WAR_ABS_PATH com.sendgrid.EmbeddedTomcatServer"
+java -cp "$CLASSPATH" -Dwar.file.path="$WAR_ABS_PATH" com.sendgrid.EmbeddedTomcatServer || {
     echo ""
     echo "ERROR: Failed to start EmbeddedTomcatServer"
     echo "Exit code: $?"
